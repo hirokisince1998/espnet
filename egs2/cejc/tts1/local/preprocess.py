@@ -14,6 +14,14 @@ cejcroot = sys.argv[1] # /home/corpus/CEJC
 spkid = sys.argv[2]
 outdir = sys.argv[3]
 
+# power := mean(wf^2) for 50ms
+def rmscontour(waveform, fs):
+    framelen = fs // 20  # 20Hz = 1/0.05s
+    waveform = waveform[:(len(waveform) // framelen) * framelen]
+    w2 = np.square(waveform)
+    return np.sqrt(w2.reshape(-1, framelen).mean(axis=-1))
+
+
 conversation_df = pd.read_csv(join(cejcroot, "metaInfo", "結合用", "conversation.csv"),dtype=str,encoding='shift_jis')
 participant_df = pd.read_csv(join(cejcroot, "metaInfo", "結合用", "participant.csv"),dtype=str,encoding='shift_jis')
 R_df = pd.read_table("downloads/R_log.tsv", names=["会話ID","startTime","endTime","text"])
@@ -29,6 +37,7 @@ target = participant_df[
 spklabdict = dict(zip(target["会話ID"],target["話者ラベル"]))
 sessioniddict = dict(zip(conversation_df["会話ID"],conversation_df["セッションID"]))
 
+wavs = []
 lines = []
 
 for conversation in target["会話ID"]:
@@ -71,11 +80,12 @@ for conversation in target["会話ID"]:
     
     wavfn = join(sessiondir, f"{conversation}_{icid}.wav")
     samplerate, wav = wavfile.read(wavfn)
+    wav = wav.astype(float)/32768.0
     # CEJC bug workaround 2023.11.30
     if conversation in ["K001_010", "K001_013"]: # 44100Hz
         if wav.ndim == 2:
             wav = wav.mean(axis=1)
-        wav = resample(wav, int(len(wav)/samplerate * 16000)).astype(np.int16)
+        wav = resample(wav, int(len(wav)/samplerate * 16000))
         samplerate = 16000
 
     assert samplerate == 16000
@@ -85,8 +95,24 @@ for conversation in target["会話ID"]:
         startsample= np.rint(startTime * samplerate).astype(int)
         endsample = np.rint(endTime * samplerate).astype(int)
         uttwav = wav[startsample:endsample]
-        wavfile.write(f"{outdir}/{outbn}.wav", samplerate, uttwav)
+        #wavfile.write(f"{outdir}/{outbn}.wav", samplerate, uttwav)
+        wavs.append((conversation, f"{outdir}/{outbn}.wav", uttwav))
         lines.append(f"{outbn} {pron}\n")
 
+maxrms = {}
+for conversation, wavfn, uttwav in wavs:
+    if not conversation in maxrms:
+        maxrms[conversation] = []
+    maxrms[conversation].append(np.percentile(rmscontour(uttwav, samplerate), 98))
+meanmaxrms = {}
+for conversation, maxrmslist in maxrms.items():
+    meanmaxrms[conversation] = np.mean(maxrmslist)
+    print(f"meanmaxrms({conversation}) = {meanmaxrms[conversation]}")
+maxmeanmaxrms = np.max(list(meanmaxrms.values()))
+
+for conversation, wavfn, uttwav in wavs:
+    uttwav *= maxmeanmaxrms / meanmaxrms[conversation]
+    uttwav *= 0.5 # adjustment
+    wavfile.write(wavfn, samplerate, (uttwav * 32768.0).astype(np.int16))
 with open(f"{outdir}/text", "w") as f:
     f.writelines(lines)
