@@ -16,7 +16,7 @@ outdir = sys.argv[3]
 
 conversation_df = pd.read_csv(join(cejcroot, "metaInfo", "結合用", "conversation.csv"),dtype=str,encoding='shift_jis')
 participant_df = pd.read_csv(join(cejcroot, "metaInfo", "結合用", "participant.csv"),dtype=str,encoding='shift_jis')
-R_df = pd.read_table("R_log.tsv", names=["会話ID","startTime","endTime","text"])
+R_df = pd.read_table("downloads/R_log.tsv", names=["会話ID","startTime","endTime","text"])
 
 # https://www2.ninjal.ac.jp/conversation/cejc/mediaList.html
 cellphoneconvs = ["K001_011","K001_019","K004_001","K005_019a","K005_019b","K005_024","K005_033","K006_016","K010_003a","K010_003b","K010_004a","K010_004b","T006_005","T021_015"]
@@ -28,6 +28,8 @@ target = participant_df[
     (participant_df["話者ID"].isin(cellphoneconvs) == False)]
 spklabdict = dict(zip(target["会話ID"],target["話者ラベル"]))
 sessioniddict = dict(zip(conversation_df["会話ID"],conversation_df["セッションID"]))
+
+lines = []
 
 for conversation in target["会話ID"]:
     spklab = spklabdict[conversation]
@@ -78,11 +80,13 @@ for conversation in target["会話ID"]:
 
     assert samplerate == 16000
     
-    with open(f"{outdir}/phonemes", "a") as f:
-        for startTime, endTime, pron in transUnit.itertuples(index=False):
-            outbn = "{}_{}_{:07d}_{:07d}".format(conversation, icid, int(startTime * 1000), int(endTime * 1000))
-            startsample= np.rint(startTime * samplerate).astype(int)
-            endsample = np.rint(endTime * samplerate).astype(int)
-            uttwav = wav[startsample:endsample]
-            wavfile.write(f"{outdir}/{outbn}.wav", samplerate, uttwav)
-            f.write(f"{outbn} {pron}\n")
+    for startTime, endTime, pron in transUnit.itertuples(index=False):
+        outbn = "{}_{}_{:07d}_{:07d}".format(conversation, icid, int(startTime * 1000), int(endTime * 1000))
+        startsample= np.rint(startTime * samplerate).astype(int)
+        endsample = np.rint(endTime * samplerate).astype(int)
+        uttwav = wav[startsample:endsample]
+        wavfile.write(f"{outdir}/{outbn}.wav", samplerate, uttwav)
+        lines.append(f"{outbn} {pron}\n")
+
+with open(f"{outdir}/text", "w") as f:
+    f.writelines(lines)

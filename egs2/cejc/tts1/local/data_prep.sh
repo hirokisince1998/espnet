@@ -27,19 +27,19 @@ data_dir=${org_data_dir}
 scp=${data_dir}/wav.scp
 utt2spk=${data_dir}/utt2spk
 spk2utt=${data_dir}/spk2utt
-phonemes=${data_dir}/phonemes
+text=${data_dir}/text
 
 # check file existence
 [ -e ${scp} ] && rm ${scp}
 [ -e ${utt2spk} ] && rm ${utt2spk}
-[ -e ${phonemes} ] && rm ${phonemes}
+[ -e ${text} ] && rm ${text}
 
 # make scp, utt2spk, and spk2utt
 local/preprocess.py $db $spk $data_dir
 export data_dir
-perl -ne 'my ($bn, $phn)=split; print "${bn} $ENV{data_dir}/$bn.wav\n"' $phonemes > $scp
+perl -ne 'my ($bn, $phn)=split; print "${bn} $ENV{data_dir}/$bn.wav\n"' $text > $scp
 export spk
-perl -ne 'my ($bn, $phn)=split; print "${bn} $ENV{spk}\n"' $phonemes > $utt2spk
+perl -ne 'my ($bn, $phn)=split; print "${bn} $ENV{spk}\n"' $text > $utt2spk
 utils/utt2spk_to_spk2utt.pl ${utt2spk} > ${spk2utt}
 echo "finished making wav.scp, utt2spk, spk2utt."
 
