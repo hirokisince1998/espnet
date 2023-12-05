@@ -29,11 +29,11 @@ R_df = pd.read_table("downloads/R_log.tsv", names=["会話ID","startTime","endTi
 # https://www2.ninjal.ac.jp/conversation/cejc/mediaList.html
 cellphoneconvs = ["K001_011","K001_019","K004_001","K005_019a","K005_019b","K005_024","K005_033","K006_016","K010_003a","K010_003b","K010_004a","K010_004b","T006_005","T021_015"]
 
-spkids = ["K001"]
+spkids = [spkid]
 
 target = participant_df[
     participant_df["話者ID"].isin(spkids) &
-    (participant_df["話者ID"].isin(cellphoneconvs) == False)]
+    (participant_df["会話ID"].isin(cellphoneconvs) == False)]
 spklabdict = dict(zip(target["会話ID"],target["話者ラベル"]))
 sessioniddict = dict(zip(conversation_df["会話ID"],conversation_df["セッションID"]))
 
@@ -107,12 +107,11 @@ for conversation, wavfn, uttwav in wavs:
 meanmaxrms = {}
 for conversation, maxrmslist in maxrms.items():
     meanmaxrms[conversation] = np.mean(maxrmslist)
-    print(f"meanmaxrms({conversation}) = {meanmaxrms[conversation]}")
 maxmeanmaxrms = np.max(list(meanmaxrms.values()))
 
 for conversation, wavfn, uttwav in wavs:
     uttwav *= maxmeanmaxrms / meanmaxrms[conversation]
-    uttwav *= 0.5 # adjustment
+    #uttwav *= 0.5 # adjustment
     wavfile.write(wavfn, samplerate, (uttwav * 32768.0).astype(np.int16))
 with open(f"{outdir}/text", "w") as f:
     f.writelines(lines)
