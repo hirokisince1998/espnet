@@ -111,7 +111,11 @@ maxmeanmaxrms = np.max(list(meanmaxrms.values()))
 
 for conversation, wavfn, uttwav in wavs:
     uttwav *= maxmeanmaxrms / meanmaxrms[conversation]
-    #uttwav *= 0.5 # adjustment
+    uttwav *= 0.5 # adjustment
+    _uttwav = np.clip(uttwav, -0.9999, 0.9999)
+    if not np.array_equal(_uttwav, uttwav):
+        print(f"Warning: clipped. {wavfn}")
+    uttwav = _uttwav
     wavfile.write(wavfn, samplerate, (uttwav * 32768.0).astype(np.int16))
 with open(f"{outdir}/text", "w") as f:
     f.writelines(lines)
