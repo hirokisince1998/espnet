@@ -34,7 +34,7 @@ fi
 set -euo pipefail
 
 # NOTE(kan-bayashi): p315 will not be used since it lacks txt data
-spks=$(find "${db}/wav48" -maxdepth 1 -name "p*" -exec basename {} \; | sort | grep -v p315)
+spks=$(find -L "${db}/wav48" -maxdepth 1 -name "p*" -exec basename {} \; | sort | grep -v p315)
 train_data_dirs=""
 dev_data_dirs=""
 eval_data_dirs=""

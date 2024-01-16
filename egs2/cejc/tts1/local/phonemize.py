@@ -53,7 +53,9 @@ def mora2phoneme(text):
               "ファ": "ɸ a",
               "フィ": "ɸ i",
               "フェ": "ɸ e",
-              "フォ": "ɸ o"}
+              "フォ": "ɸ o",
+              "ウィ": "w i",
+              "ウェ": "w e"}
     table = {"ア": "a",
              "イ": "i",
              "ウ": "ɯ",
@@ -121,7 +123,8 @@ def mora2phoneme(text):
              "レ": "ɾ e",
              "ロ": "ɾ o",
              "ワ": "ɰᵝ a",
-             "ン": "ɴ"}
+             "ン": "ɴ",
+             "＃": "#"}
     text = text.replace(" ", "▁ ")
     for m, p in table2.items():
         text = text.replace(m, p + " ")
@@ -129,6 +132,8 @@ def mora2phoneme(text):
         text = text.replace(m, p + " ")
     text = text.rstrip()
     text = text.replace(" ー", ": ")
-    text = re.sub("ッ([^aiueo]*) ([aiueo])", r"\1: \2", text)
+    text = re.sub("ッ([^aiɯeo]*) ([aiɯeo])", r"\1: \2", text)
+    text = re.sub("ッ([aiɯeo])", r"ʔ \1", text)
+    text = re.sub("ッ$", "ʔ", text)
 
     return text
