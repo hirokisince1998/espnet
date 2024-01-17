@@ -103,6 +103,7 @@ SWBD_NXT=
 THCHS30=downloads
 TIMIT=
 TSUKUYOMI=downloads
+UUDB=/home/corpus/UUDB
 VOXFORGE=downloads
 AMI=
 COMMONVOICE=downloads
