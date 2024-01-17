@@ -71,15 +71,14 @@ if __name__ == "__main__":
                 text.append(utt.PhoneticTranscription)
                 utt2spk.append(utt.Speaker)
                 wavscp.append(wavfn)
-            with open(join(outdir, setn, "spk2utt"), "w") as f:
-                utts = []
-                for spk in spk2utt.keys():
-                    utts.append(" ".join(spk2utt[spk]))
-                f.writelines([f"{s} {u}\n" for s, u in zip(spk2utt.keys(), utts)])
-            with open(join(outdir, setn, "text"), "w") as f:
-                f.writelines([f"{u} {t}\n" for u, t in zip(uttid, text)])
-            with open(join(outdir, setn, "utt2spk"), "w") as f:
-                f.writelines([f"{u} {s}\n" for u, s in zip(uttid, utt2spk)])
-            with open(join(outdir, setn, "wav.scp"), "w") as f:
-                f.writelines([f"{u} {w}\n" for u, w in zip(uttid, wavscp)])
-            
+        with open(join(outdir, setn, "spk2utt"), "w") as f:
+            utts = []
+            for spk in spk2utt.keys():
+                utts.append(" ".join(spk2utt[spk]))
+            f.writelines([f"{s} {u}\n" for s, u in zip(spk2utt.keys(), utts)])
+        with open(join(outdir, setn, "text"), "w") as f:
+            f.writelines([f"{u} {t}\n" for u, t in zip(uttid, text)])
+        with open(join(outdir, setn, "utt2spk"), "w") as f:
+            f.writelines([f"{u} {s}\n" for u, s in zip(uttid, utt2spk)])
+        with open(join(outdir, setn, "wav.scp"), "w") as f:
+            f.writelines([f"{u} {w}\n" for u, w in zip(uttid, wavscp)])

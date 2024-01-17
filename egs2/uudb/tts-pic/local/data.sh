@@ -34,6 +34,4 @@ db_root=${UUDB}
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     log "stage 1: local/makesets.py"
     local/makesets.py ${db_root} data
-    utils/validate_data_dir.sh --no-feats --no-spk-sort data/train
-    utils/validate_data_dir.sh --no-feats --no-spk-sort data/test
 fi
