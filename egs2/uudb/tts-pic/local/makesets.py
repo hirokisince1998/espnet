@@ -9,6 +9,7 @@ from os.path import join
 from scipy.io import wavfile
 import sys
 from makemetadata import uudb_df
+from phonemize import mora2phoneme
 
 testset = [
     "C002_L_107",
@@ -29,9 +30,22 @@ testset = [
     "C051_R_170",
 ]
 
+def tokenize(text):
+    phonelist = mora2phoneme(text).\
+        replace("\u3001", " sp "). \
+        replace("[", " [ "). \
+        replace("]", " ] "). \
+        replace("{laugh}", " <laugh> "). \
+        replace("{breath}", " <breath> "). \
+        replace("{sigh}", " <sigh> "). \
+        replace("{cough}", " <cough> "). \
+        split()
+    return " ".join(phonelist)    
+
 if __name__ == "__main__":
     uudbroot = sys.argv[1]
     outdir = sys.argv[2]
+    phonemize = True
 
     df = uudb_df(uudbroot)
     df = df[df.Speaker.str.startswith("F")]
@@ -68,7 +82,10 @@ if __name__ == "__main__":
                     spk2utt[utt.Speaker].append(utt.wavbn)
                 else:
                     spk2utt[utt.Speaker] = [utt.wavbn]
-                text.append(utt.PhoneticTranscription)
+                if phonemize:
+                    text.append(tokenize(utt.PhoneticTranscription))
+                else:
+                    text.append(utt.PhoneticTranscription)
                 utt2spk.append(utt.Speaker)
                 wavscp.append(wavfn)
         with open(join(outdir, setn, "spk2utt"), "w") as f:
