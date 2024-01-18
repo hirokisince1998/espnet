@@ -51,10 +51,10 @@ if __name__ == "__main__":
     df = df[df.Speaker.str.startswith("F")]
     df = df[df.numMorae >= 3]
     df = df[df.numLaugh == 0]
-    df = df.assign(wavbn = df.apply(lambda u: f"{u.SessionID}_{u.Channel}_{u.UtteranceID}", axis=1))
+    df = df.assign(wavbn = df.apply(lambda u: f"{u.SessionID}{u.Speaker}_{u.UtteranceID}", axis=1)) # C001FTS_001
 
-    df_ = {"train": df[df.apply(lambda u: not u.wavbn in testset, axis=1)],
-           "test": df[df.apply(lambda u: u.wavbn in testset, axis=1)]}
+    df_ = {"train": df[df.apply(lambda u: not f"{u.SessionID}_{u.Channel}_{u.UtteranceID}" in testset, axis=1)],
+           "test": df[df.apply(lambda u: f"{u.SessionID}_{u.Channel}_{u.UtteranceID}" in testset, axis=1)]}
 
     for setn in ["train", "test"]:
         uttid = []
@@ -68,7 +68,7 @@ if __name__ == "__main__":
             wav = wav.astype(np.float64) / 32768.0
             assert wav.ndim == 2
             ch = {"L": 0, "R": 1}
-            for utt in sessiondf.itertuples():
+            for utt in sessiondf.sort_values("wavbn").itertuples():
                 span = np.array([utt.startTime, utt.endTime])
                 span = np.rint(span * samplerate).astype(int)
                 range = np.arange(*span)
@@ -78,15 +78,16 @@ if __name__ == "__main__":
                 wavfn = join(wavdir, utt.wavbn + ".wav")
                 wavfile.write(wavfn, samplerate, (uttwav * 32768.0).astype(np.int16))
                 uttid.append(utt.wavbn)
-                if utt.Speaker in spk2utt:
-                    spk2utt[utt.Speaker].append(utt.wavbn)
+                kaldiSpeakerID = sessionID + utt.Speaker # C001FTS
+                if kaldiSpeakerID in spk2utt:
+                    spk2utt[kaldiSpeakerID].append(utt.wavbn)
                 else:
-                    spk2utt[utt.Speaker] = [utt.wavbn]
+                    spk2utt[kaldiSpeakerID] = [utt.wavbn]
                 if phonemize:
                     text.append(tokenize(utt.PhoneticTranscription))
                 else:
                     text.append(utt.PhoneticTranscription)
-                utt2spk.append(utt.Speaker)
+                utt2spk.append(kaldiSpeakerID)
                 wavscp.append(wavfn)
         with open(join(outdir, setn, "spk2utt"), "w") as f:
             utts = []
