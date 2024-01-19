@@ -2,6 +2,7 @@
 # coding: utf-8
 # make train and test sets for Paralinguistic Information Controllable TTS
 
+import argparse
 import numpy as np
 import pandas as pd
 import os
@@ -10,6 +11,20 @@ from scipy.io import wavfile
 import sys
 from makemetadata import uudb_df
 from phonemize import Phonemizer
+
+def get_parser():
+    parser = argparse.ArgumentParser(
+        description="Make datasets for UUDB",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument("uudbroot", help="directory for UUDB")
+    parser.add_argument("outdir", help="output directory")
+    parser.add_argument("--phonemize", action="store_true", help="convert phonetic trans to phoneme")
+    parser.add_argument("--minlength", type=int, default=3, help="minimum length in mora")
+    parser.add_argument("--exclude_laughter", nargs="*", help="exclude utterance with laughter from train and/or test sets (separate by spaces)")
+    parser.add_argument("--delete_laughter", action="store_true", help="delete laughs from transcriptions")
+
+    return parser
 
 testset = [
     "C002_L_107",
@@ -45,14 +60,18 @@ def tokenize(text):
     return " ".join(phonelist)    
 
 if __name__ == "__main__":
-    uudbroot = sys.argv[1]
-    outdir = sys.argv[2]
-    phonemize = True
+    args = get_parser().parse_args(sys.argv[1:])
+
+    uudbroot = args.uudbroot
+    outdir = args.outdir
+    phonemize = args.phonemize
+    minlength = args.minlength
+    exclude_laughter_from = args.exclude_laughter
+    delete_laughter = args.delete_laughter
 
     df = uudb_df(uudbroot)
     df = df[df.Speaker.str.startswith("F")]
-    df = df[df.numMorae >= 3]
-    df = df[df.numLaugh == 0]
+    df = df[df.numMorae >= minlength]
     df = df.assign(wavbn = df.apply(lambda u: f"{u.SessionID}{u.Speaker}_{u.UtteranceID}", axis=1)) # C001FTS_001
 
     df_ = {"train": df[df.apply(lambda u: not f"{u.SessionID}_{u.Channel}_{u.UtteranceID}" in testset, axis=1)],
@@ -64,6 +83,9 @@ if __name__ == "__main__":
         text = []
         utt2spk = []
         wavscp = []
+        if exclude_laughter_from is not None:
+            if setn in exclude_laughter_from:
+                df_[setn] = df_[setn][df_[setn].numLaugh == 0]
         for sessionID, sessiondf in df_[setn].groupby("SessionID"):
             samplerate, wav = wavfile.read(join(uudbroot, "Sessions", sessionID,
                                                 f"{sessionID}.wav"))
@@ -85,10 +107,13 @@ if __name__ == "__main__":
                     spk2utt[kaldiSpeakerID].append(utt.wavbn)
                 else:
                     spk2utt[kaldiSpeakerID] = [utt.wavbn]
+                transcription = utt.PhoneticTranscription
+                if delete_laughter:
+                    transcription = transcription.replace("{laugh}", "")
                 if phonemize:
-                    text.append(tokenize(utt.PhoneticTranscription))
+                    text.append(tokenize(transcription))
                 else:
-                    text.append(utt.PhoneticTranscription)
+                    text.append(transcription)
                 utt2spk.append(kaldiSpeakerID)
                 wavscp.append(wavfn)
         with open(join(outdir, setn, "spk2utt"), "w") as f:

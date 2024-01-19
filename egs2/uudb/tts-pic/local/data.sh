@@ -33,6 +33,6 @@ db_root=${UUDB}
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     log "stage 1: local/makesets.py"
-    local/makesets.py ${db_root} data
+    local/makesets.py ${db_root} data --phonemize --minlength 3 --exclude_laughter train --delete_laughter
     utils/validate_data_dir.sh --no-feats data/train
 fi
