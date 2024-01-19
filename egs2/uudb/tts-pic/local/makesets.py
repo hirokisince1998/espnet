@@ -9,7 +9,7 @@ from os.path import join
 from scipy.io import wavfile
 import sys
 from makemetadata import uudb_df
-from phonemize import mora2phoneme
+from phonemize import Phonemizer
 
 testset = [
     "C002_L_107",
@@ -30,8 +30,10 @@ testset = [
     "C051_R_170",
 ]
 
+phonemizer = Phonemizer()
+
 def tokenize(text):
-    phonelist = mora2phoneme(text).\
+    phonelist = phonemizer(text).\
         replace("\u3001", " sp "). \
         replace("[", " [ "). \
         replace("]", " ] "). \

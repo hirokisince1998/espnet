@@ -1,9 +1,6 @@
-# phonemization for text2phoneme
-# Nov 29 2023 hiroki
-
 import re
 
-def mora2phoneme(text):
+def mora2phoneme_text2phoneme(text):
     table2 = {"キャ": "k j a",
               "キュ": "k j ɯ",
               "キョ": "k j o",
@@ -137,3 +134,146 @@ def mora2phoneme(text):
     text = re.sub("ッ$", "ʔ", text)
 
     return text
+
+def mora2phoneme_jpn(text):
+    table2 = {"キャ": "ky a",
+              "キュ": "ky u",
+              "キョ": "ky o",
+              "ギャ": "gy a",
+              "ギュ": "gy u",
+              "ギョ": "gy o",
+              "シャ": "sy a",
+              "シュ": "sy u",
+              "シェ": "sy e",
+              "ショ": "sy o",
+              "ジャ": "zy a",
+              "ジュ": "zy u",
+              "ジェ": "zy e",
+              "ジョ": "zy o",
+              "チャ": "ch a",
+              "チュ": "ch u",
+              "チェ": "ch e",
+              "チョ": "ch o",
+              "ニャ": "ny a",
+              "ニュ": "ny u",
+              "ニョ": "ny o",
+              "ヒャ": "hy a",
+              "ヒュ": "hy u",
+              "ヒョ": "hy o",
+              "ピャ": "py a",
+              "ピュ": "py u",
+              "ピョ": "py o",
+              "ビャ": "by a",
+              "ビュ": "by u",
+              "ビョ": "by o",
+              "ミャ": "my a",
+              "ミュ": "my u",
+              "ミョ": "my o",
+              "リャ": "ry a",
+              "リュ": "ry u",
+              "リョ": "ry o",
+              "ティ": "t i", # チと同じ
+              "ディ": "d i", # cf. /z i/
+              "トゥ": "t u", # ツと同じ
+              "ドゥ": "d u", # cf. /z u/
+              # "デュ": "dy u", # UUDBには出現しない
+              "ツァ": "ts a",
+              "ツェ": "ts e",
+              "ツォ": "ts o",
+              "スィ": "s i", # シと同じ
+              "ズィ": "z i", # ジと同じ
+              "ファ": "f a",
+              "フィ": "f i",
+              "フェ": "f e",
+              "フォ": "f o",
+              "ウィ": "w i",
+              "ウェ": "w e"}
+    table = {"ア": "a",
+             "イ": "i",
+             "ウ": "u",
+             "エ": "e",
+             "オ": "o",
+             "カ": "k a",
+             "キ": "k i",
+             "ク": "k u",
+             "ケ": "k e",
+             "コ": "k o",
+             "ガ": "g a",
+             "ギ": "g i",
+             "グ": "g u",
+             "ゲ": "g e",
+             "ゴ": "g o",
+             "サ": "s a",
+             "シ": "s i",
+             "ス": "s u",
+             "セ": "s e",
+             "ソ": "s o",
+             "ザ": "z a",
+             "ジ": "z i",
+             "ズ": "z u",
+             "ゼ": "z e",
+             "ゾ": "z o",
+             "タ": "t a",
+             "チ": "t i",
+             "ツ": "t u",
+             "テ": "t e",
+             "ト": "t o",
+             "ダ": "d a",
+             "ヂ": "z i", # ジと同じ
+             "ヅ": "z u", # ズと同じ
+             "デ": "d e",
+             "ド": "d o",
+             "ナ": "n a",
+             "ニ": "n i",
+             "ヌ": "n u",
+             "ネ": "n e",
+             "ノ": "n o",
+             "ハ": "h a",
+             "ヒ": "h i",
+             "フ": "h u",
+             "ヘ": "h e",
+             "ホ": "h o",
+             "パ": "p a",
+             "ピ": "p i",
+             "プ": "p u",
+             "ペ": "p e",
+             "ポ": "p o",
+             "バ": "b a",
+             "ビ": "b i",
+             "ブ": "b u",
+             "ベ": "b e",
+             "ボ": "b o",
+             "マ": "m a",
+             "ミ": "m i",
+             "ム": "m u",
+             "メ": "m e",
+             "モ": "m o",
+             "ヤ": "y a",
+             "ユ": "y u",
+             "ヨ": "y o",
+             "ラ": "r a",
+             "リ": "r i",
+             "ル": "r u",
+             "レ": "r e",
+             "ロ": "r o",
+             "ワ": "w a",
+             "ン": "N",
+             "ッ": "Q",
+             "＃": "#"}
+    text = text.replace(" ", "sp")
+    for m, p in table2.items():
+        text = text.replace(m, p + " ")
+    for m, p in table.items():
+        text = text.replace(m, p + " ")
+    text = text.rstrip()
+    text = text.replace(" ー", ": ")
+
+    return text
+
+class Phonemizer:
+
+    def __init__(self, mora2phoneme=mora2phoneme_jpn):
+        self.mora2phoneme = mora2phoneme
+
+    def __call__(self, text):
+        return self.mora2phoneme(text)
