@@ -23,6 +23,7 @@ def get_parser():
     parser.add_argument("--minlength", type=int, default=3, help="minimum length in mora")
     parser.add_argument("--exclude_laughter", nargs="*", help="exclude utterance with laughter from train and/or test sets (separate by spaces)")
     parser.add_argument("--delete_laughter", action="store_true", help="delete laughs from transcriptions")
+    parser.add_argument("--emotion_dims", help="emotion dimensions (separate by commas)")
 
     return parser
 
@@ -68,6 +69,10 @@ if __name__ == "__main__":
     minlength = args.minlength
     exclude_laughter_from = args.exclude_laughter
     delete_laughter = args.delete_laughter
+    if args.emotion_dims is not None:
+        emotion_dimensions = args.emotion_dims.split(',')
+    else:
+        emotion_dimensions = None
 
     df = uudb_df(uudbroot)
     df = df[df.Speaker.str.startswith("F")]
@@ -82,6 +87,7 @@ if __name__ == "__main__":
         spk2utt = {}
         text = []
         utt2spk = []
+        utt2emodim = []
         wavscp = []
         if exclude_laughter_from is not None:
             if setn in exclude_laughter_from:
@@ -115,6 +121,9 @@ if __name__ == "__main__":
                 else:
                     text.append(transcription)
                 utt2spk.append(kaldiSpeakerID)
+                if emotion_dimensions is not None:
+                    center = lambda d: ((d-4.0)) / 3.0
+                    utt2emodim.append(",".join(["{:.3f}".format(center(getattr(utt, dim))) for dim in emotion_dimensions]))
                 wavscp.append(wavfn)
         with open(join(outdir, setn, "spk2utt"), "w") as f:
             utts = []
@@ -127,3 +136,6 @@ if __name__ == "__main__":
             f.writelines([f"{u} {s}\n" for u, s in zip(uttid, utt2spk)])
         with open(join(outdir, setn, "wav.scp"), "w") as f:
             f.writelines([f"{u} {w}\n" for u, w in zip(uttid, wavscp)])
+        if emotion_dimensions is not None:
+            with open(join(outdir, setn, "utt2emodim"), "w") as f:
+                f.writelines([f"{u} {w}\n" for u, w in zip(uttid, utt2emodim)])
