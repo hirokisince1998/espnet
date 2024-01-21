@@ -72,6 +72,7 @@ class VITS(AbsGANTTS):
             "spks": None,
             "langs": None,
             "spk_embed_dim": None,
+            "emotion_dim": None,
             "global_channels": -1,
             "segment_size": 32,
             "text_encoder_attention_heads": 2,
@@ -285,6 +286,7 @@ class VITS(AbsGANTTS):
         speech_lengths: torch.Tensor,
         sids: Optional[torch.Tensor] = None,
         spembs: Optional[torch.Tensor] = None,
+        emodims: Optional[torch.Tensor] = None,
         lids: Optional[torch.Tensor] = None,
         forward_generator: bool = True,
     ) -> Dict[str, Any]:
@@ -299,6 +301,7 @@ class VITS(AbsGANTTS):
             speech_lengths (Tensor): Speech length tensor (B,).
             sids (Optional[Tensor]): Speaker index tensor (B,) or (B, 1).
             spembs (Optional[Tensor]): Speaker embedding tensor (B, spk_embed_dim).
+            emodims (Optional[Tensor]): Emotion dimension tensor (B, emotion_dim).
             lids (Optional[Tensor]): Language index tensor (B,) or (B, 1).
             forward_generator (bool): Whether to forward generator.
 
@@ -320,6 +323,7 @@ class VITS(AbsGANTTS):
                 speech_lengths=speech_lengths,
                 sids=sids,
                 spembs=spembs,
+                emodims=emodims,
                 lids=lids,
             )
         else:
@@ -332,6 +336,7 @@ class VITS(AbsGANTTS):
                 speech_lengths=speech_lengths,
                 sids=sids,
                 spembs=spembs,
+                emodims=emodims,
                 lids=lids,
             )
 
@@ -345,6 +350,7 @@ class VITS(AbsGANTTS):
         speech_lengths: torch.Tensor,
         sids: Optional[torch.Tensor] = None,
         spembs: Optional[torch.Tensor] = None,
+        emodims: Optional[torch.Tensor] = None,
         lids: Optional[torch.Tensor] = None,
     ) -> Dict[str, Any]:
         """Perform generator forward.
@@ -358,6 +364,7 @@ class VITS(AbsGANTTS):
             speech_lengths (Tensor): Speech length tensor (B,).
             sids (Optional[Tensor]): Speaker index tensor (B,) or (B, 1).
             spembs (Optional[Tensor]): Speaker embedding tensor (B, spk_embed_dim).
+            emodims (Optional[Tensor]): Emotion dimension tensor (B, emotion_dim).
             lids (Optional[Tensor]): Language index tensor (B,) or (B, 1).
 
         Returns:
@@ -384,6 +391,7 @@ class VITS(AbsGANTTS):
                 feats_lengths=feats_lengths,
                 sids=sids,
                 spembs=spembs,
+                emodims=emodims,
                 lids=lids,
             )
         else:
@@ -455,6 +463,7 @@ class VITS(AbsGANTTS):
         speech_lengths: torch.Tensor,
         sids: Optional[torch.Tensor] = None,
         spembs: Optional[torch.Tensor] = None,
+        emodims: Optional[torch.Tensor] = None,
         lids: Optional[torch.Tensor] = None,
     ) -> Dict[str, Any]:
         """Perform discriminator forward.
@@ -468,6 +477,7 @@ class VITS(AbsGANTTS):
             speech_lengths (Tensor): Speech length tensor (B,).
             sids (Optional[Tensor]): Speaker index tensor (B,) or (B, 1).
             spembs (Optional[Tensor]): Speaker embedding tensor (B, spk_embed_dim).
+            emodims (Optional[Tensor]): Emotion dimension tensor (B, emotion_dim).
             lids (Optional[Tensor]): Language index tensor (B,) or (B, 1).
 
         Returns:
@@ -494,6 +504,7 @@ class VITS(AbsGANTTS):
                 feats_lengths=feats_lengths,
                 sids=sids,
                 spembs=spembs,
+                emodims=emodims,
                 lids=lids,
             )
         else:
@@ -544,6 +555,7 @@ class VITS(AbsGANTTS):
         feats: Optional[torch.Tensor] = None,
         sids: Optional[torch.Tensor] = None,
         spembs: Optional[torch.Tensor] = None,
+        emodims: Optional[torch.Tensor] = None,
         lids: Optional[torch.Tensor] = None,
         durations: Optional[torch.Tensor] = None,
         noise_scale: float = 0.667,
@@ -559,6 +571,7 @@ class VITS(AbsGANTTS):
             feats (Tensor): Feature tensor (T_feats, aux_channels).
             sids (Tensor): Speaker index tensor (1,).
             spembs (Optional[Tensor]): Speaker embedding tensor (spk_embed_dim,).
+            emodims (Optional[Tensor]): Emotion dimension tensor (emotion_dim,).
             lids (Tensor): Language index tensor (1,).
             durations (Tensor): Ground-truth duration tensor (T_text,).
             noise_scale (float): Noise scale value for flow.
@@ -604,6 +617,7 @@ class VITS(AbsGANTTS):
                 feats_lengths=feats_lengths,
                 sids=sids,
                 spembs=spembs,
+                emodims=emodims,
                 lids=lids,
                 max_len=max_len,
                 use_teacher_forcing=use_teacher_forcing,
@@ -614,6 +628,7 @@ class VITS(AbsGANTTS):
                 text_lengths=text_lengths,
                 sids=sids,
                 spembs=spembs,
+                emodims=emodims,
                 lids=lids,
                 dur=durations,
                 noise_scale=noise_scale,

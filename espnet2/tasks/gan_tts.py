@@ -259,6 +259,7 @@ class GANTTSTask(AbsTask):
                 "pitch",
                 "energy",
                 "sids",
+                "emodims",
                 "lids",
             )
         else:
@@ -270,6 +271,7 @@ class GANTTSTask(AbsTask):
                 "pitch",
                 "energy",
                 "sids",
+                "emodims",
                 "lids",
             )
         return retval
@@ -314,6 +316,7 @@ class GANTTSTask(AbsTask):
 
         # 3. TTS
         tts_class = tts_choices.get_class(args.tts)
+        print(f"args.tts_conf={args.tts_conf}")
         tts = tts_class(idim=vocab_size, odim=odim, **args.tts_conf)
 
         # 4. Extra components

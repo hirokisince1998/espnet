@@ -45,6 +45,7 @@ class VITSGenerator(torch.nn.Module):
         spks: Optional[int] = None,
         langs: Optional[int] = None,
         spk_embed_dim: Optional[int] = None,
+        emotion_dim: Optional[int] = None,
         global_channels: int = -1,
         segment_size: int = 32,
         text_encoder_attention_heads: int = 2,
@@ -99,6 +100,8 @@ class VITSGenerator(torch.nn.Module):
                 lids will be provided as the input and use sid embedding layer.
             spk_embed_dim (Optional[int]): Speaker embedding dimension. If set to > 0,
                 assume that spembs will be provided as the input.
+            emotion_dim (Optional[int]): Emotion dimension. If set to >0,
+                assume that emodims ([-1,1]) will be provided as the input.
             global_channels (int): Number of global conditioning channels.
             segment_size (int): Segment size for decoder.
             text_encoder_attention_heads (int): Number of heads in conformer block
@@ -245,6 +248,11 @@ class VITSGenerator(torch.nn.Module):
             assert global_channels > 0
             self.spk_embed_dim = spk_embed_dim
             self.spemb_proj = torch.nn.Linear(spk_embed_dim, global_channels)
+        self.emotion_dim = None
+        if emotion_dim is not None and emotion_dim > 0:
+            assert global_channels > 0
+            self.emotion_dim = emotion_dim
+            self.emodim_proj = torch.nn.Linear(emotion_dim, global_channels)
         self.langs = None
         if langs is not None and langs > 1:
             assert global_channels > 0
@@ -264,6 +272,7 @@ class VITSGenerator(torch.nn.Module):
         feats_lengths: torch.Tensor,
         sids: Optional[torch.Tensor] = None,
         spembs: Optional[torch.Tensor] = None,
+        emodims: Optional[torch.Tensor] = None,
         lids: Optional[torch.Tensor] = None,
     ) -> Tuple[
         torch.Tensor,
@@ -290,6 +299,7 @@ class VITSGenerator(torch.nn.Module):
             feats_lengths (Tensor): Feature length tensor (B,).
             sids (Optional[Tensor]): Speaker index tensor (B,) or (B, 1).
             spembs (Optional[Tensor]): Speaker embedding tensor (B, spk_embed_dim).
+            emodims (Optional[Tensor]): Emotion dimension tensor (B, emotion_dim).
             lids (Optional[Tensor]): Language index tensor (B,) or (B, 1).
 
         Returns:
@@ -319,6 +329,12 @@ class VITSGenerator(torch.nn.Module):
         if self.spk_embed_dim is not None:
             # pretreined speaker embedding, e.g., X-vector (B, global_channels, 1)
             g_ = self.spemb_proj(F.normalize(spembs)).unsqueeze(-1)
+            if g is None:
+                g = g_
+            else:
+                g = g + g_
+        if self.emotion_dim is not None:
+            g_ = self.emodim_proj(emodims).unsqueeze(-1)
             if g is None:
                 g = g_
             else:
@@ -416,6 +432,7 @@ class VITSGenerator(torch.nn.Module):
         feats_lengths: Optional[torch.Tensor] = None,
         sids: Optional[torch.Tensor] = None,
         spembs: Optional[torch.Tensor] = None,
+        emodims: Optional[torch.Tensor] = None,
         lids: Optional[torch.Tensor] = None,
         dur: Optional[torch.Tensor] = None,
         noise_scale: float = 0.667,
@@ -433,6 +450,7 @@ class VITSGenerator(torch.nn.Module):
             feats_lengths (Tensor): Feature length tensor (B,).
             sids (Optional[Tensor]): Speaker index tensor (B,) or (B, 1).
             spembs (Optional[Tensor]): Speaker embedding tensor (B, spk_embed_dim).
+            emodims (Optional[Tensor]): Emotion dimension tensor (B, emotion_dim).
             lids (Optional[Tensor]): Language index tensor (B,) or (B, 1).
             dur (Optional[Tensor]): Ground-truth duration (B, T_text,). If provided,
                 skip the prediction of durations (i.e., teacher forcing).
@@ -457,6 +475,13 @@ class VITSGenerator(torch.nn.Module):
         if self.spk_embed_dim is not None:
             # (B, global_channels, 1)
             g_ = self.spemb_proj(F.normalize(spembs.unsqueeze(0))).unsqueeze(-1)
+            if g is None:
+                g = g_
+            else:
+                g = g + g_
+        if self.emotion_dim is not None:
+            # (B, global_channels, 1)
+            g_ = self.emodim_proj(emodims.unsqueeze(0)).unsqueeze(-1)
             if g is None:
                 g = g_
             else:

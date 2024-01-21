@@ -78,6 +78,7 @@ class ESPnetGANTTSModel(AbsGANESPnetModel):
         energy_lengths: Optional[torch.Tensor] = None,
         spembs: Optional[torch.Tensor] = None,
         sids: Optional[torch.Tensor] = None,
+        emodims: Optional[torch.Tensor] = None,
         lids: Optional[torch.Tensor] = None,
         forward_generator: bool = True,
         **kwargs,
@@ -96,6 +97,7 @@ class ESPnetGANTTSModel(AbsGANESPnetModel):
             energy (Optional[Tensor]): Energy tensor.
             energy_lengths (Optional[Tensor]): Energy length tensor (B,).
             spembs (Optional[Tensor]): Speaker embedding tensor (B, D).
+            emodims (Optional[Tensor]): Emotion dimension tensor (B, emotion_dim).
             sids (Optional[Tensor]): Speaker ID tensor (B, 1).
             lids (Optional[Tensor]): Language ID tensor (B, 1).
             forward_generator (bool): Whether to forward generator.
@@ -164,6 +166,8 @@ class ESPnetGANTTSModel(AbsGANESPnetModel):
             batch.update(spembs=spembs)
         if sids is not None:
             batch.update(sids=sids)
+        if emodims is not None:
+            batch.update(emodims=emodims)
         if lids is not None:
             batch.update(lids=lids)
 
@@ -183,6 +187,7 @@ class ESPnetGANTTSModel(AbsGANESPnetModel):
         energy_lengths: Optional[torch.Tensor] = None,
         spembs: Optional[torch.Tensor] = None,
         sids: Optional[torch.Tensor] = None,
+        emodims: Optional[torch.Tensor] = None,
         lids: Optional[torch.Tensor] = None,
         **kwargs,
     ) -> Dict[str, torch.Tensor]:
@@ -201,6 +206,7 @@ class ESPnetGANTTSModel(AbsGANESPnetModel):
             energy_lengths (Optional[Tensor): Energy length tensor (B,).
             spembs (Optional[Tensor]): Speaker embedding tensor (B, D).
             sids (Optional[Tensor]): Speaker index tensor (B, 1).
+            emodims (Optional[Tensor]): Emotion dimension tensor (B, emotion_dim).
             lids (Optional[Tensor]): Language ID tensor (B, 1).
 
         Returns:
