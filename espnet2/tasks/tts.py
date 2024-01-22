@@ -259,6 +259,7 @@ class TTSTask(AbsTask):
                 "pitch",
                 "energy",
                 "sids",
+                "emodims",
                 "lids",
             )
         else:
@@ -270,6 +271,7 @@ class TTSTask(AbsTask):
                 "pitch",
                 "energy",
                 "sids",
+                "emodims",
                 "lids",
             )
         return retval

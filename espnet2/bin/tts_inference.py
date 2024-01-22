@@ -152,6 +152,7 @@ class Text2Speech:
         durations: Union[torch.Tensor, np.ndarray] = None,
         spembs: Union[torch.Tensor, np.ndarray] = None,
         sids: Union[torch.Tensor, np.ndarray] = None,
+        emodims: Union[torch.Tensor, np.ndarray] = None,
         lids: Union[torch.Tensor, np.ndarray] = None,
         decode_conf: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, torch.Tensor]:
@@ -163,6 +164,8 @@ class Text2Speech:
             raise RuntimeError("Missing required argument: 'speech'")
         if self.use_sids and sids is None:
             raise RuntimeError("Missing required argument: 'sids'")
+        if self.use_emodims and emodims is None:
+            raise RuntimeError("Missing required argument: 'emodims'")
         if self.use_lids and lids is None:
             raise RuntimeError("Missing required argument: 'lids'")
         if self.use_spembs and spembs is None:
@@ -180,6 +183,8 @@ class Text2Speech:
             batch.update(spembs=spembs)
         if sids is not None:
             batch.update(sids=sids)
+        if emodims is not None:
+            batch.update(emodims=emodims)
         if lids is not None:
             batch.update(lids=lids)
         batch = to_device(batch, self.device)
@@ -233,6 +238,11 @@ class Text2Speech:
     def use_sids(self) -> bool:
         """Return sid is needed or not in the inference."""
         return self.tts.spks is not None
+
+    @property
+    def use_emodims(self) -> bool:
+        """Return emodim is needed or not in the inference."""
+        return self.tts.emotion_dim is not None
 
     @property
     def use_lids(self) -> bool:

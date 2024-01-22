@@ -265,6 +265,7 @@ class VITS(AbsGANTTS):
         self.spks = self.generator.spks
         self.langs = self.generator.langs
         self.spk_embed_dim = self.generator.spk_embed_dim
+        self.emotion_dim = self.generator.emotion_dim
 
     @property
     def require_raw_speech(self):
