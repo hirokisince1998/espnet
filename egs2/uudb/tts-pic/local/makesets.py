@@ -77,11 +77,12 @@ if __name__ == "__main__":
     df = uudb_df(uudbroot)
     df = df[df.Speaker.str.startswith("F")]
     df = df[df.numMorae >= minlength]
-    df = df.assign(wavbn = df.apply(lambda u: f"{u.SessionID}{u.Speaker}_{u.UtteranceID}", axis=1)) # C001FTS_001
+    df = df.assign(wavbn = df.apply(lambda u: f"{u.Speaker}_{u.SessionID}_{u.UtteranceID}", axis=1)) # FTS_C001_001
 
     df_ = {"train": df[df.apply(lambda u: not f"{u.SessionID}_{u.Channel}_{u.UtteranceID}" in testset, axis=1)],
            "test": df[df.apply(lambda u: f"{u.SessionID}_{u.Channel}_{u.UtteranceID}" in testset, axis=1)]}
 
+    wavs = {}
     for setn in ["train", "test"]:
         uttid = []
         spk2utt = {}
@@ -92,39 +93,42 @@ if __name__ == "__main__":
         if exclude_laughter_from is not None:
             if setn in exclude_laughter_from:
                 df_[setn] = df_[setn][df_[setn].numLaugh == 0]
-        for sessionID, sessiondf in df_[setn].groupby("SessionID"):
-            samplerate, wav = wavfile.read(join(uudbroot, "Sessions", sessionID,
-                                                f"{sessionID}.wav"))
-            wav = wav.astype(np.float64) / 32768.0
-            assert wav.ndim == 2
+        df_[setn] = df_[setn].sort_values("wavbn")
+        for utt in df_[setn].itertuples():
+            if not utt.SessionID in wavs:
+                samplerate, wav = wavfile.read(join(uudbroot, "Sessions", utt.SessionID,
+                                                    f"{utt.SessionID}.wav"))
+                wav = wav.astype(np.float64) / 32768.0
+                assert wav.ndim == 2
+                wavs[utt.SessionID] = (samplerate, wav)
+            else:
+                samplerate, wav = wavs[utt.SessionID]
             ch = {"L": 0, "R": 1}
-            for utt in sessiondf.sort_values("wavbn").itertuples():
-                span = np.array([utt.startTime, utt.endTime])
-                span = np.rint(span * samplerate).astype(int)
-                range = np.arange(*span)
-                uttwav = wav[range, ch[utt.Channel]]
-                wavdir = join(outdir, setn, "wav")
-                os.makedirs(wavdir, exist_ok=True)
-                wavfn = join(wavdir, utt.wavbn + ".wav")
-                wavfile.write(wavfn, samplerate, (uttwav * 32768.0).astype(np.int16))
-                uttid.append(utt.wavbn)
-                kaldiSpeakerID = sessionID + utt.Speaker # C001FTS
-                if kaldiSpeakerID in spk2utt:
-                    spk2utt[kaldiSpeakerID].append(utt.wavbn)
-                else:
-                    spk2utt[kaldiSpeakerID] = [utt.wavbn]
-                transcription = utt.PhoneticTranscription
-                if delete_laughter:
-                    transcription = transcription.replace("{laugh}", "")
-                if phonemize:
-                    text.append(tokenize(transcription))
-                else:
-                    text.append(transcription)
-                utt2spk.append(kaldiSpeakerID)
-                if emotion_dimensions is not None:
-                    center = lambda d: ((d-4.0)) / 3.0
-                    utt2emodim.append(",".join(["{:.3f}".format(center(getattr(utt, dim))) for dim in emotion_dimensions]))
-                wavscp.append(wavfn)
+            span = np.array([utt.startTime, utt.endTime])
+            span = np.rint(span * samplerate).astype(int)
+            range = np.arange(*span)
+            uttwav = wav[range, ch[utt.Channel]]
+            wavdir = join(outdir, setn, "wav")
+            os.makedirs(wavdir, exist_ok=True)
+            wavfn = join(wavdir, utt.wavbn + ".wav")
+            wavfile.write(wavfn, samplerate, (uttwav * 32768.0).astype(np.int16))
+            uttid.append(utt.wavbn)
+            if utt.Speaker in spk2utt:
+                spk2utt[utt.Speaker].append(utt.wavbn)
+            else:
+                spk2utt[utt.Speaker] = [utt.wavbn]
+            transcription = utt.PhoneticTranscription
+            if delete_laughter:
+                transcription = transcription.replace("{laugh}", "")
+            if phonemize:
+                text.append(tokenize(transcription))
+            else:
+                text.append(transcription)
+            utt2spk.append(utt.Speaker)
+            if emotion_dimensions is not None:
+                center = lambda d: ((d-4.0)) / 3.0
+                utt2emodim.append(",".join(["{:.3f}".format(center(getattr(utt, dim))) for dim in emotion_dimensions]))
+            wavscp.append(wavfn)
         with open(join(outdir, setn, "spk2utt"), "w") as f:
             utts = []
             for spk in spk2utt.keys():
