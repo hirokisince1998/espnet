@@ -497,7 +497,9 @@ if ! "${skip_data_prep}"; then
             # Copy data dir
             utils/copy_data_dir.sh "${data_feats}/org/${dset}" "${data_feats}/${dset}"
             cp "${data_feats}/org/${dset}/feats_type" "${data_feats}/${dset}/feats_type"
-	    cp "${data_feats}/org/${dset}/utt2emodim" "${data_feats}/${dset}/utt2emodim"
+	    if [ -e "${data_feats}/org/${dset}/utt2emodim" ]; then
+		cp "${data_feats}/org/${dset}/utt2emodim" "${data_feats}/${dset}/utt2emodim"
+	    fi
             if [ -e "${data_feats}/org/${dset}/utt2sid" ]; then
                 cp "${data_feats}/org/${dset}/utt2sid" "${data_feats}/${dset}/utt2sid"
             fi

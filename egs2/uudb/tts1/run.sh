@@ -1,2 +1,40 @@
-./tts.sh --fs 22050 --cleaner none --g2p none --tts_task gan_tts --use_sid true --train_set train --valid_set test --test_sets test --srctexts data/train/text --train_config conf/train.yaml --use_emodims true  --inference_model train.total_count.ave.pth "$@"
-#python3 -m espnet2.bin.tts_inference --ngpu 0 --data_path_and_name_and_type dump/raw/test/text,text,text --data_path_and_name_and_type dump/raw/test/utt2emodim,emodims,csv_float --model_file $modeldir/latest.pth --train_config $modeldir/config.yaml --output_dir /home/drobo/hiroki/vits-pic --config conf/decode.yaml --data_path_and_name_and_type test/utt2sid,sids,text_int
+#!/usr/bin/env bash
+# Set bash to 'debug' mode, it will exit on :
+# -e 'error', -u 'undefined variable', -o ... 'error in pipeline', -x 'print commands',
+set -e
+set -u
+set -o pipefail
+
+fs=22050
+
+opts=
+
+train_set=train
+valid_set=test
+test_sets=test
+
+tts_task=gan_tts
+use_sid=true
+use_emodims=true
+train_config=conf/train.yaml
+inference_config=conf/decode.yaml
+inference_model=train.total_count.ave.pth
+
+# Input example: こ、こんにちは
+# (e.g. k o sp k o N n i t i w a)
+
+./tts.sh \
+    --fs "${fs}" \
+    --cleaner none \
+    --g2p none \
+    --tts_task "${tts_task}" \
+    --use_sid "${use_sid}" \
+    --use_emodims "${use_emodims}" \
+    --train_config "${train_config}" \
+    --inference_config "${inference_config}" \
+    --inference_model "${inference_model}" \
+    --train_set "${train_set}" \
+    --valid_set "${valid_set}" \
+    --test_sets "${test_sets}" \
+    --srctexts "data/${train_set}/text" \
+    ${opts} "$@"
